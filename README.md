@@ -10,7 +10,7 @@
 
 ## Chapter 1: Natural Language Processing with Classification and Vector Spaces
 
-### [01. Sentiment Analysis with Logistic Regression](assignments/C1_W1/)
+### 01. [Sentiment Analysis with Logistic Regression](assignments/C1_W1/)
 
 #### Lab
 
@@ -23,22 +23,38 @@
 - Logistic Regression
 
 
-### 02. Sentiment Analysis with Naïve Bayes
+### 02. [Sentiment Analysis with Naïve Bayes](assignments/C1_W2/)
 
-### 03. Vector Space Models
+#### Lab
 
-### 04. Machine Translation and Document Search
+- Visualizing likelihoods and confidence ellipses
 
+#### Assignment
 
-
-## Chapter 2
-
-
-
-## Chapter 3
+- Naïve Bayes
 
 
+### 03. [Vector Space Models](assignments/C1_W3/)
 
-## Chapter 4
+#### Lab
 
+- Linear algebra in Python with Numpy
+- Manipulating word embeddings
+- Another explanation about PCA
+
+#### Assignment
+
+- Vector Space Models
+
+
+### 04. [Machine Translation and Document Search](assignments/C1_W4/)
+
+#### Lab
+
+- Rotation matrices in R2
+- Hash tables
+
+#### Assignment
+
+- Machine Translation
 
