@@ -8,7 +8,26 @@
 
 
 
-## Chapter 1
+## Chapter 1: Natural Language Processing with Classification and Vector Spaces
+
+### [01. Sentiment Analysis with Logistic Regression](assignments/C1_W1/)
+
+#### Lab
+
+- Natural Language preprocessing
+- Visualizing word frequencies
+- Visualizing tweets and Logistic Regression models
+
+#### Assignment
+
+- Logistic Regression
+
+
+### 02. Sentiment Analysis with Naïve Bayes
+
+### 03. Vector Space Models
+
+### 04. Machine Translation and Document Search
 
 
 
