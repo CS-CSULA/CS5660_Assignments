@@ -10,107 +10,31 @@
 
 ## Chapter 1: Natural Language Processing with Classification and Vector Spaces
 
-### 01. [Sentiment Analysis with Logistic Regression](assignments/C1_W1/)
-
-#### Lab
-
-- Natural Language preprocessing
-- Visualizing word frequencies
-- Visualizing tweets and Logistic Regression models
-
-#### Assignment
-
-- Logistic Regression
-
-
-### 02. [Sentiment Analysis with Naïve Bayes](assignments/C1_W2/)
-
-#### Lab
-
-- Visualizing likelihoods and confidence ellipses
-
-#### Assignment
-
-- Naïve Bayes
-
-
-### 03. [Vector Space Models](assignments/C1_W3/)
-
-#### Lab
-
-- Linear algebra in Python with Numpy
-- Manipulating word embeddings
-- Another explanation about PCA
-
-#### Assignment
-
-- Vector Space Models
-
-
-### 04. [Machine Translation and Document Search](assignments/C1_W4/)
-
-#### Lab
-
-- Rotation matrices in R2
-- Hash tables
-
-#### Assignment
-
-- Machine Translation
-
+- [c1_w1](assignments/C1_W1/)
+- [c1_w2](assignments/C1_W2/)
+- [c1_w3](assignments/C1_W3/)
+- [c1_w4](assignments/C1_W4/)
 
 
 ## Chapter 2: Natural Language Processing with Probabilistic Models
 
-### 01. Autocorrect
-
-#### Lab
-
-- Building the vocabulary
-- Candidates from edits
+- [c2_w1](assignments/C2_W1/)
+- [c2_w2](assignments/C2_W2/)
+- [c2_w3](assignments/C2_W3/)
+- [c2_w4](assignments/C2_W4/)
 
 
-#### Assignment
+## Chapter 3: Natural Language Processing with Sequence Models
 
-- Autocorrect
-
-
-### 02. Part of Speech Tagging and Hidden Markov Models
-
-#### Lab
-
-- Working with text files
-- Working with tags and Numpy
-
-#### Assignment
-
-- Part of Speech Tagging
+- [c3_w1](assignments/C3_W1/)
+- [c3_w2](assignments/C3_W2/)
+- [c3_w3](assignments/C3_W3/)
+- [c3_w4](assignments/C3_W4/)
 
 
-### 03. Autocomplete and Language Models
+## Chapter 4: Natural Language Processing with Attention Models
 
-#### Lab
-
-- Corpus preprocessing for N-grams
-- Building the language model
-- Language model generalization
-
-#### Assignment
-
-- Autocomplete
-
-
-### 04. Word embeddings with neural networks
-
-#### Lab
-
-- Data Preparation
-- Intro to CBOW model
-- Training the CBOW model
-- Word Embeddings
-- Word embeddings step by step
-
-#### Assignment
-
-- Word Embeddings
-
+- [c4_w1](assignments/C4_W1/)
+- [c4_w2](assignments/C4_W2/)
+- [c4_w3](assignments/C4_W3/)
+- [c4_w4](assignments/C4_W4/)
