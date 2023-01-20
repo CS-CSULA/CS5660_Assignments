@@ -58,3 +58,59 @@
 
 - Machine Translation
 
+
+
+## Chapter 2: Natural Language Processing with Probabilistic Models
+
+### 01. Autocorrect
+
+#### Lab
+
+- Building the vocabulary
+- Candidates from edits
+
+
+#### Assignment
+
+- Autocorrect
+
+
+### 02. Part of Speech Tagging and Hidden Markov Models
+
+#### Lab
+
+- Working with text files
+- Working with tags and Numpy
+
+#### Assignment
+
+- Part of Speech Tagging
+
+
+### 03. Autocomplete and Language Models
+
+#### Lab
+
+- Corpus preprocessing for N-grams
+- Building the language model
+- Language model generalization
+
+#### Assignment
+
+- Autocomplete
+
+
+### 04. Word embeddings with neural networks
+
+#### Lab
+
+- Data Preparation
+- Intro to CBOW model
+- Training the CBOW model
+- Word Embeddings
+- Word embeddings step by step
+
+#### Assignment
+
+- Word Embeddings
+
