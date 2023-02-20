@@ -1,6 +1,6 @@
 # Vector Space Models
 
-- Accept [c1_w3](https://classroom.github.com/a/YmRT0jae)
+- Accept [C1_W3](https://classroom.github.com/a/YmRT0jae)
 
 ---
 
