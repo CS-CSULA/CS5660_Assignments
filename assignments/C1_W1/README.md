@@ -1,6 +1,6 @@
 # Sentiment Analysis with Logistic Regression
 
-- Accept [c1_w1](https://classroom.github.com/a/iRaUCOqf)
+- Accept [C1_W1](https://classroom.github.com/a/iRaUCOqf)
 
 ---
 
