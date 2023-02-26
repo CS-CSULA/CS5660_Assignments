@@ -1,6 +1,6 @@
 # Autocorrect
 
-- Accept [c2_w1]()
+- Accept [C2_W1](https://classroom.github.com/a/4ogNijc0)
 
 ---
 

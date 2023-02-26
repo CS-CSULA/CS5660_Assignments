@@ -1,6 +1,6 @@
 # Machine Translation and Document Search
 
-- Accept [c1_w4](https://classroom.github.com/a/V31VWcmk)
+- Accept [C1_W4](https://classroom.github.com/a/V31VWcmk)
 
 ---
 

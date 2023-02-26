@@ -1,6 +1,6 @@
 # Sentiment Analysis with Naïve Bayes
 
-- Accept [c1_w2](https://classroom.github.com/a/TsRDgpOT)
+- Accept [C1_W2](https://classroom.github.com/a/TsRDgpOT)
 
 ---
 
