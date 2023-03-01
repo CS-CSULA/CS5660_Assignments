@@ -1,7 +1,5 @@
-from utils_pos import get_word_tag, preprocess
 import pandas as pd
 from collections import defaultdict
-import math
 import numpy as np
 import pickle
 
@@ -1158,7 +1156,7 @@ def test_viterbi_forward(target, A, B, test_corpus, vocab):
     # return failed_cases, len(failed_cases) + successful_cases
 
 
-def test_viterbi_backward(target, corpus, states):
+def test_viterbi_backward(target, states):
     successful_cases = 0
     failed_cases = []
 
@@ -1166,7 +1164,6 @@ def test_viterbi_backward(target, corpus, states):
         {
             "name": "default_check",
             "input": {
-                "corpus": corpus,
                 "best_probs": pickle.load(
                     open("./support_files/best_probs_trained.pkl", "rb")
                 ),
@@ -1231,7 +1228,7 @@ def test_viterbi_backward(target, corpus, states):
                 }
             )
             print(
-                f"Wrong output lenght.\n\t Expected: {failed_cases[-1].get('expected')}.\n\t Got: {failed_cases[-1].get('got')}."
+                f"Wrong output length.\n\t Expected: {failed_cases[-1].get('expected')}.\n\t Got: {failed_cases[-1].get('got')}."
             )
 
         try:
@@ -1315,12 +1312,12 @@ def test_compute_accuracy(target, pred, y):
             failed_cases.append(
                 {
                     "name": str(test_case["name"]),
-                    "expected": float,
-                    "got": type(result),
+                    "expected": test_case["expected"],
+                    "got": result,
                 }
             )
             print(
-                f"Wrong output type.\n\t Expected: {failed_cases[-1].get('expected')}.\n\t Got: {failed_cases[-1].get('got')}."
+                f"Wrong output value.\n\t Expected: {failed_cases[-1].get('expected')}.\n\t Got: {failed_cases[-1].get('got')}."
             )
 
     if len(failed_cases) == 0:
