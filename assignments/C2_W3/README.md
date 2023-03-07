@@ -1,6 +1,6 @@
 # Autocomplete and Language Models
 
-- Accept [c2_w3]()
+- Accept [C2_W3](https://classroom.github.com/a/oNmQRMMr)
 
 ---
 
