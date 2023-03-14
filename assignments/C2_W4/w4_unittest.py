@@ -1663,6 +1663,7 @@ def test_gradient_descent(target, data, word2Ind, N, V, num_iters):
                 "num_iters": num_iters,
                 "alpha": 0.03,
                 "random_seed": 282,
+                "verbose": False,
             },
             "expected": {
                 "W1": pickle.load(
@@ -1689,6 +1690,7 @@ def test_gradient_descent(target, data, word2Ind, N, V, num_iters):
                 "num_iters": num_iters,
                 "alpha": 0.01,
                 "random_seed": 5,
+                "verbose": False,
             },
             "expected": {
                 "W1": pickle.load(
