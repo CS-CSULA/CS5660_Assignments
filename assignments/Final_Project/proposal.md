@@ -19,7 +19,7 @@ This is going to be public for the entire class, feel free to check out other pr
 5. What you will do (Approach, 4-5+ sentences) - Be specific about what you will implement and what existing code you will use. Describe what you actually plan to implement or the experiments you might try, etc. Again, provide sufficient information describing exactly what you’ll do. One of the key things to note is that just downloading code and running it on a dataset is not sufficient for a description or a project! Some thorough implementation, analysis, theory, etc. have to be done for the project.
 6. Resources / Related Work & Papers (4-5+ sentences). What is the state of the art for this problem? Note that it is perfectly fine for this project to implement approaches that already exist. This part should show you’ve done some research about what approaches exist.
 7. Datasets (Provide a Link to the dataset). This is crucial! Deep learning is data-driven, so what datasets you use are crucial. One of the key things is to make sure you don’t try to create and especially annotate your own data! Otherwise, the project will be taken over by this.
-8. List your Group members. (2-5 people)
+8. List your Group members. (2-5 team members)
 9. Are you looking for more members?
 
 Each member of your group will then reply to this post to confirm they are part of the project.
