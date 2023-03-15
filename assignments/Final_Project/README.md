@@ -31,3 +31,15 @@ The rubrics are along with the [LaTex template](https://www.overleaf.com/read/q
 - Project proposal: The project proposal will be due Week 12, Sunday, 11:59 PM. We will ask for a short proposal with the team, topic, and related work (papers/materials on the topic). None of it will be set in stone nor will you have to commit to what you propose exactly. The purpose is to give you feedback on feasibility, risk, and guidelines for success. Please do make use of it as it is important to make sure there aren't any obvious risks to the project.
 
 - Final project: The final project will be due Week 17, Sunday 11:59 PM. There will be no extensions (the grading deadline is soon after).
+
+## Reminder
+
+**IMPORTANT NOTE:**
+
+We know teams are sometimes hard, but please make sure to respect your teammates and put significant effort into it, as if it was an individual assignment. We expect *everyone* in the team to participate actively, and you should probably be meeting/communicating regularly (several times a week) at this point. Do not skip these meetings.
+
+We will ask for per-team-member contributions in the report, that everyone agrees to. The table should have specifics ("implemented X algorithm, see Section X for description and alg.py in code", "tuned hyper-parameters, see Section Y of report for procedure and results", "identified overfitting and added regularization (see reg.py) and showed a comparison with and without it (see Section Z)", etc.) Every team member must meaningfully contribute in terms of the natural language processing implementation and/or experimentation. Members cannot just, for example, help with writing the report at the end and that's it. Further, if it is determined that you did not meaningfully contribute, this will impact your grade.
+
+Make sure that you have concrete task(s) to accomplish which, if completed, you would be proud of and can talk about in the report and contributions table.
+
+As always, let us know if you have any project related questions.
