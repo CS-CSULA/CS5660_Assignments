@@ -1710,7 +1710,7 @@ def test_gradient_descent(target, data, word2Ind, N, V, num_iters):
     ]
 
     for test_case in test_cases:
-        print("name", test_case["name"])
+        # print("name", test_case["name"])
         W1, W2, b1, b2 = target(**test_case["input"])
 
         try:
