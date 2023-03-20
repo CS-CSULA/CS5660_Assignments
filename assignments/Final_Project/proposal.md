@@ -47,7 +47,7 @@ Resources/Related Work:
 
 1. “A Spatio-temporal Transformer for 3D HumanMotion Prediction”, Aksan et al.
 2. “Recurrent Network Models for Human Dynamics”, Fragkiadaki et al.
-3. "“Learning Dynamic Relationships for 3D Human Motion Prediction”, Cui et al.
+3. “Learning Dynamic Relationships for 3D Human Motion Prediction”, Cui et al.
 4. “Convolutional Sequence to Sequence Model for Human Dynamics”, Zhang et al.
 5. “Attention is all you need”, Vaswani et al.
 6. “On human motion prediction using recurrent neural networks”, Martinez et al.
