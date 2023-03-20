@@ -1,6 +1,6 @@
 # Final Project
 
-As we get closer to the middle of the semester, we'd like to have everyone start thinking about the final project. The final project is essentially the last assignment, so you don't have to start the technical part immediately (though of course, you can start whenever you'd like if you have the time!). However, we'd like to ensure you have the team, topic, and some understanding of what's been done for the problem and datasets you'd use so that you're ready once this period starts.
+As we get closer to the end of the semester, we'd like to have everyone start thinking about the final project. The final project is essentially the last assignment, so you don't have to start the technical part immediately (though of course, you can start whenever you'd like if you have the time!). However, we'd like to ensure you have the team, topic, and some understanding of what's been done for the problem and datasets you'd use so that you're ready once this period starts.
 
 Here are some comments/guidelines/due dates:
 
