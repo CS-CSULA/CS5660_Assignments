@@ -24,7 +24,7 @@ Here are some comments/guidelines/due dates:
 
 ## Rubrics
 
-The rubrics are along with the [LaTex template](https://www.overleaf.com/read/qqcypvxzwpbx) for the report (you can use Word or something else, but please follow the format and structure and font/margins to make sure you don't miss something and make grading easier).
+The [rubrics](rubrik.md) are along with the [LaTex template](https://www.overleaf.com/read/qqcypvxzwpbx) for the report (you can use Word or something else, but please follow the format and structure and font/margins to make sure you don't miss something and make grading easier).
 
 ## Due Dates
 
