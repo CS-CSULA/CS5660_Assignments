@@ -30,7 +30,7 @@
 
   - What’s the availability of the datasets? Are they open-sourced? Is there any restriction regarding how students should use them?
 
-    - Students can use data and models from: https://github.com/facebookresearch/flores
+    - Students can use data and models from [FLORES](https://github.com/facebookresearch/flores)
 
 - What is the state-of-the-art approach, if applicable?
 
@@ -55,7 +55,7 @@
 
 ### Resources
 
-- [FLORES](https://github.com/facebookresearch/flores).
+- [FLORES](https://github.com/facebookresearch/flores)
 
 ## Transfer Learning for Machine Translation Quality Estimation
 
@@ -181,7 +181,7 @@ composed or stacked
 
 ### Resources
 
-- https://course.fast.ai/#using-a-gpu
+- https://course.fast.ai/#using-a-gpu/
 - https://adapterhub.ml/
 - https://huggingface.co/transformers/
 
