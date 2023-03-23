@@ -1,4 +1,4 @@
-# NLP Projects
+# NLP Capstone Projects
 
 ## Confident Machine Translation
 
