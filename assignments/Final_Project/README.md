@@ -20,7 +20,7 @@ Here are some comments/guidelines/due dates:
 
 - You can come up with any topic you'd like! Below are some suggestions if you are having trouble coming up with one (again you are not limited to them). I highly recommend watching interesting talks, reading papers, etc. to get ideas.
 
-- I will be posted a couple of project ideas so that you can pick one up among them if you/your team do not have any ideas.
+- I will be posted a couple of [project ideas](./ideas.md) so that you can pick one up among them if you/your team do not have any ideas.
 
 ## Rubrics
 
