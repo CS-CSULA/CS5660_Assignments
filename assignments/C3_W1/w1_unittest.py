@@ -20,7 +20,7 @@ def test_tweet_to_tensor(target, Vocab):
                 "unk_token": "__UNK__",
             },
             "expected": {
-                "output_list": [444, 2, 304, 567, 56, 9],
+                "output_list": [443, 2, 303, 566, 56, 9],
                 "output_type": type([]),
             },
         },
@@ -32,7 +32,7 @@ def test_tweet_to_tensor(target, Vocab):
                 "unk_token": "followfriday",
             },
             "expected": {
-                "output_list": [444, 3, 304, 567, 56, 9],
+                "output_list": [443, 3, 303, 566, 56, 9],
                 "output_type": type([]),
             },
         },
@@ -44,7 +44,7 @@ def test_tweet_to_tensor(target, Vocab):
                 "unk_token": "__UNK__",
             },
             "expected": {
-                "output_list": [60, 2992, 2, 22, 236, 1292, 45, 1354, 118],
+                "output_list": [60, 2991, 2, 22, 235, 1291, 45, 1353, 118],
                 "output_type": type([]),
             },
         },
@@ -56,7 +56,7 @@ def test_tweet_to_tensor(target, Vocab):
                 "unk_token": "__UNK__",
             },
             "expected": {
-                "output_list": [-1, -10, 2, -22, 236, 1292, 45, -4531, 118],
+                "output_list": [-1, -10, 2, -22, 235, 1291, 45, -4531, 118],
                 "output_type": type([]),
             },
         },
@@ -93,16 +93,14 @@ def test_tweet_to_tensor(target, Vocab):
             )
 
         try:
-
             assert isinstance(result, test_case["expected"]["output_type"])
             successful_cases += 1
-
         except:
             failed_cases.append(
                 {
                     "name": "simple_test_check",
-                    "expected": test_case["expected"]["output_list"],
-                    "got": result,
+                    "expected": test_case["expected"]["output_type"],
+                    "got": type(result),
                 }
             )
             print(
@@ -114,8 +112,6 @@ def test_tweet_to_tensor(target, Vocab):
     else:
         print("\033[92m", successful_cases, " Tests passed")
         print("\033[91m", len(failed_cases), " Tests failed")
-
-    # return failed_cases, len(failed_cases) + successful_cases
 
 
 def test_data_generator(target):
@@ -229,13 +225,13 @@ def test_data_generator(target):
         )
 
     try:
-        assert isinstance(result[0], jax.interpreters.xla.DeviceArray)
+        assert isinstance(result[0], jax.Array)
         successful_cases += 1
     except:
         failed_cases.append(
             {
                 "name": "check_type_subarray0",
-                "expected": jax.interpreters.xla.DeviceArray,
+                "expected": jax.Array,
                 "got": type(result[0]),
             }
         )
@@ -244,13 +240,13 @@ def test_data_generator(target):
         )
 
     try:
-        assert isinstance(result[1], jax.interpreters.xla.DeviceArray)
+        assert isinstance(result[1], jax.Array)
         successful_cases += 1
     except:
         failed_cases.append(
             {
                 "name": "check_type_subarray1",
-                "expected": jax.interpreters.xla.DeviceArray,
+                "expected": jax.Array,
                 "got": type(result[1]),
             }
         )
@@ -259,13 +255,13 @@ def test_data_generator(target):
         )
 
     try:
-        assert isinstance(result[2], jax.interpreters.xla.DeviceArray)
+        assert isinstance(result[2], jax.Array)
         successful_cases += 1
     except:
         failed_cases.append(
             {
                 "name": "check_type_subarray2",
-                "expected": jax.interpreters.xla.DeviceArray,
+                "expected": jax.Array,
                 "got": type(result[2]),
             }
         )
@@ -280,20 +276,20 @@ def test_data_generator(target):
                 [
                     [3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0],
                     [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 9, 21, 22],
-                    [5738, 2901, 3761, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [5736, 2900, 3760, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                     [
-                        858,
-                        256,
-                        3652,
-                        5739,
-                        307,
-                        4458,
-                        567,
-                        1230,
-                        2767,
-                        328,
-                        1202,
-                        3761,
+                        857,
+                        255,
+                        3651,
+                        5737,
+                        306,
+                        4457,
+                        566,
+                        1229,
+                        2766,
+                        327,
+                        1201,
+                        3760,
                         0,
                         0,
                     ],
@@ -309,20 +305,20 @@ def test_data_generator(target):
                     [
                         [3, 4, 5, 6, 7, 8, 9, 0, 0, 0, 0, 0, 0, 0],
                         [10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 9, 21, 22],
-                        [5738, 2901, 3761, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+                        [5736, 2900, 3760, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
                         [
-                            858,
-                            256,
-                            3652,
-                            5739,
-                            307,
-                            4458,
-                            567,
-                            1230,
-                            2767,
-                            328,
-                            1202,
-                            3761,
+                            857,
+                            255,
+                            3651,
+                            5737,
+                            306,
+                            4457,
+                            566,
+                            1229,
+                            2766,
+                            327,
+                            1201,
+                            3760,
                             0,
                             0,
                         ],
@@ -332,7 +328,7 @@ def test_data_generator(target):
             }
         )
         print(
-            f"First output from data_generator (inputs) has the wrong type.\n\tExpected {failed_cases[-1].get('expected')}.\n\tGot {failed_cases[-1].get('got')}."
+            f"First output from data_generator (inputs) has the wrong values.\n\tExpected {failed_cases[-1].get('expected')}.\n\tGot {failed_cases[-1].get('got')}."
         )
 
     try:
@@ -396,15 +392,12 @@ def test_data_generator(target):
         print(
             f"Data generator is not generating the same batch size after several iterations.\n\tExpected {failed_cases[-1].get('expected')}.\n\tGot: {failed_cases[-1].get('got')}."
         )
-        
 
     if len(failed_cases) == 0:
         print("\033[92m All tests passed")
     else:
         print("\033[92m", successful_cases, " Tests passed")
         print("\033[91m", len(failed_cases), " Tests failed")
-
-    # return failed_cases, len(failed_cases) + successful_cases
 
 
 def test_Relu(target):
@@ -510,7 +503,7 @@ def test_Dense(target):
                     ]
                 ),
                 "output_shape": (1, 10),
-                "output_type": jax.interpreters.xla.DeviceArray,
+                "output_type": jax.Array,
                 "weights_shape": (3, 10),
                 "weights": jax.numpy.array(
                     [
@@ -562,7 +555,7 @@ def test_Dense(target):
                     [[-1.4564116, -0.7315445, 0.14365998, 1.665177, 1.2354646]]
                 ),
                 "output_shape": (1, 5),
-                "output_type": jax.interpreters.xla.DeviceArray,
+                "output_type": jax.Array,
                 "weights_shape": (4, 5),
                 "weights": jax.numpy.array(
                     [
