@@ -12,4 +12,4 @@
 
 ## Assignment
 
-- Programming Assignment: Named Entity Recognition (NER)
+- Named Entity Recognition (NER)
