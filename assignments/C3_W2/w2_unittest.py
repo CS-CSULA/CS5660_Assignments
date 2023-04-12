@@ -244,13 +244,13 @@ def test_data_generator(target):
         # Testing types
         for index, elem_batch in enumerate(tmp_batch):
             try:
-                assert isinstance(elem_batch, jax.interpreters.xla.DeviceArray)
+                assert isinstance(elem_batch, jax.Array)
                 successful_cases += 1
             except:
                 failed_cases.append(
                     {
                         "name": "data_generator_output_types",
-                        "expected": jax.interpreters.xla.DeviceArray,
+                        "expected": jax.Array,
                         "got": type(elem_batch),
                     }
                 )
@@ -581,113 +581,6 @@ def test_train_model(target, model, data_generator):
         print(
             f"Wrong metrics in evaluations task. Expected {failed_cases[-1].get('expected')}. Got {failed_cases[-1].get('got')}."
         )
-
-    if len(failed_cases) == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", successful_cases, " Tests passed")
-        print("\033[91m", len(failed_cases), " Tests failed")
-
-    # return failed_cases, len(failed_cases) + successful_cases
-
-
-def bk2_unittest_test_model(target):
-    successful_cases = 0
-    failed_cases = []
-
-    test_cases = [
-        {
-            "name": "check_default_example",
-            "input": {
-                "preds": pickle.load(
-                    open("./test_support_files/test_preds_1.pkl", "rb")
-                ),
-                "target": pickle.load(
-                    open("./test_support_files/test_batch_1.pkl", "rb")
-                )[1],
-            },
-            "expected": 1.7646706,
-        },  # 1.7646706 5.8396482
-        {
-            "name": "check_example_2",
-            "input": {
-                "preds": pickle.load(
-                    open("./test_support_files/test_preds_2.pkl", "rb")
-                ),
-                "target": pickle.load(
-                    open("./test_support_files/test_batch_2.pkl", "rb")
-                )[1],
-            },
-            "expected": 1.5336857,
-        },  #  1.5336857 4.635229
-        {
-            "name": "check_example_3",
-            "input": {
-                "preds": pickle.load(
-                    open("./test_support_files/test_preds_3.pkl", "rb")
-                ),
-                "target": pickle.load(
-                    open("./test_support_files/test_batch_3.pkl", "rb")
-                )[1],
-            },
-            "expected": 1.5870862,
-        },  #  1.5870862 4.889481
-    ]
-
-    for test_case in test_cases:
-        result = target(**test_case["input"])
-
-        # print("target", test_case["input"]["target"])
-        # print("preds", test_case["input"]["preds"])
-        print("result", result)
-        print("jnp.exp(result)", jnp.exp(result))
-        print("np.exp(result)", numpy.exp(result))
-
-        try:
-            assert jnp.isclose(result, test_case["expected"], atol=1e-5)
-            successful_cases += 1
-        except:
-            failed_cases.append(
-                {
-                    "name": test_case["name"],
-                    "expected": test_case["expected"],
-                    "got": result,
-                }
-            )
-            print(
-                f"Your log perplexity does not match with expected value.\nCheck if you are getting rid of the padding or checking if the target equals 0.\nIf your result is an array instead of a float, check if you are using numpy to perform the sums.\n\t Expected value near: {failed_cases[-1].get('expected')}.\n\t Got {failed_cases[-1].get('got')}."
-            )
-
-        try:
-            assert not jnp.exp(result) == jnp.inf
-            successful_cases += 1
-        except:
-            failed_cases.append(
-                {
-                    "name": test_case["name"],
-                    "expected": jnp.exp(test_case["expected"]),
-                    "got": jnp.exp(result),
-                }
-            )
-            print(
-                f"Your perplexity overflowed. Take a look to the axis you are using in np.sum() function.\n\t Expected value near: {failed_cases[-1].get('expected')}.\n\t Got {failed_cases[-1].get('got')}."
-            )
-        try:
-            assert jnp.isclose(
-                jnp.exp(result), jnp.exp(test_case["expected"]), atol=1e-5
-            )
-            successful_cases += 1
-        except:
-            failed_cases.append(
-                {
-                    "name": test_case["name"],
-                    "expected": jnp.exp(test_case["expected"]),
-                    "got": jnp.exp(result),
-                }
-            )
-            print(
-                f"Your perplexity does not match with expected.\n\t Expected value near: {failed_cases[-1].get('expected')}.\n\t Got {failed_cases[-1].get('got')}."
-            )
 
     if len(failed_cases) == 0:
         print("\033[92m All tests passed")
