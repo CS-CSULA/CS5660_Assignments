@@ -206,7 +206,7 @@ def test_data_generator(target):
 
 
 # UNIT TEST
-# test data_generator
+# test NER
 def test_NER(target):
     successful_cases = 0
     failed_cases = []
