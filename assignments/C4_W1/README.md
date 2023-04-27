@@ -4,6 +4,15 @@
 
 ---
 
+## Data
+
+Dataset is getting large, so we can not push them in github, you need to download data from [google drive](https://drive.google.com/drive/folders/1CYia1fp1T7GbeAL0G4HfuG-CLn93emBK?usp=share_link)
+
+- `model.pkl.gz`: put it under `./C4_W1/` folder
+- `opus-train.tfrecord-00000-of-00002` and `opus-train.tfrecord-00001-of-00002`: put these two under `./C4_W1/data/opus/medical/0.1.0/`
+
+Note: do **NOT** push these three files to github repo, otherwise you will get 0 on this assignment.
+
 ## Lab
 
 - Basic Attention
