@@ -4,14 +4,13 @@
 
 ---
 
-## Data
+## Pre-trained Model
 
-Dataset is getting large, so we can not push them in github, you need to download data from [google drive](https://drive.google.com/drive/folders/1CYia1fp1T7GbeAL0G4HfuG-CLn93emBK?usp=share_link)
+Pre-trained model is provided and could be download from [google drive](https://drive.google.com/drive/folders/1CYia1fp1T7GbeAL0G4HfuG-CLn93emBK?usp=share_link)
 
 - `model.pkl.gz`: put it under `./C4_W1/` folder.
-- `opus-train.tfrecord-00000-of-00002` and `opus-train.tfrecord-00001-of-00002`: put these two under `./C4_W1/data/opus/medical/0.1.0/` folder.
 
-Note: do **NOT** push these three files to github repo, otherwise you will get 0 on this assignment.
+Note: do **NOT** push pre-train model and dataset files to github repo, otherwise autograder can not download your repo.
 
 ## Lab
 
