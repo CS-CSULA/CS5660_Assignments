@@ -503,7 +503,7 @@ def test_compute_pca(target):
                 }
             )
             print(
-                f"Wrong output shape. Check if you are taking the proper number of dimensions.\n\tExpected: {failed_cases[-1].get('expected')}.\n\tGot: {failed_cases[-1].get('got')}."
+                f"Wrong accuracy output.\n\tExpected: {failed_cases[-1].get('expected')}.\n\tGot: {failed_cases[-1].get('got')}."
             )
 
     if len(failed_cases) == 0:
