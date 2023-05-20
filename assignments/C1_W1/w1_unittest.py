@@ -1,4 +1,3 @@
-# import nltk
 import numpy as np
 
 
@@ -237,10 +236,8 @@ def test_gradientDescent(target):
     else:
         print("\033[92m", successful_cases, " Tests passed")
         print("\033[91m", len(failed_cases), " Tests failed")
-    
 
 
-# +
 def test_extract_features(target, freqs):
     successful_cases = 0
     failed_cases = []
@@ -312,8 +309,6 @@ def test_extract_features(target, freqs):
         print("\033[92m", successful_cases, " Tests passed")
         print("\033[91m", len(failed_cases), " Tests failed")
 
-
-# -
 
 def test_predict_tweet(target, freqs, theta):
     successful_cases = 0
@@ -416,7 +411,6 @@ def test_predict_tweet(target, freqs, theta):
     else:
         print("\033[92m", successful_cases, " Tests passed")
         print("\033[91m", len(failed_cases), " Tests failed")
-    
 
 
 def unittest_test_logistic_regression(target, freqs, theta):
@@ -532,4 +526,3 @@ def unittest_test_logistic_regression(target, freqs, theta):
     else:
         print("\033[92m", successful_cases, " Tests passed")
         print("\033[91m", len(failed_cases), " Tests failed")
-    
