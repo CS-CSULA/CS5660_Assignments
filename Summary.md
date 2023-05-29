@@ -10,6 +10,7 @@
 ### Week 2
 
 - Vector Space Models
+  - PCA
 - Machine Translation and Document Search
 
 ## Chapter 2: NLP with Probabilistic Models
