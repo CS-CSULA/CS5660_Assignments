@@ -12,6 +12,8 @@
 - Vector Space Models
   - PCA
 - Machine Translation and Document Search
+  - K nearest neighbors
+  - Locality sensitive hashing
 
 ## Chapter 2: NLP with Probabilistic Models
 
@@ -19,6 +21,9 @@
 
 - Autocorrect
 - Part of Speech Tagging and Hidden Markov Models
+  - POS
+  - Markov Chain
+  - Viterbi Algorithm
 
 ### Week 4
 
