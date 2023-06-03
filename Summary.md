@@ -28,6 +28,10 @@
 ### Week 4
 
 - Autocomplete and Language Models
+  - Process a text corpus to N-gram language model
+  - Handle out of vocabulary words
+  - Implement smoothing for previously unseen N-grams
+  - Language model evaluation
 
 ### Week 5
 
