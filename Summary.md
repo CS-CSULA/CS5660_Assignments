@@ -45,5 +45,8 @@
 - Neural Networks for Sentiment Analysis
   - Trax
 - RNN for language modeling
+  - N-grams
+  - Gated recurrent units (GRU)
+  - Recurrent neural networks (RNN)
 
 ## Chapter 4: NLP with Attention Models
