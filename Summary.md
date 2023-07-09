@@ -36,7 +36,14 @@
 ### Week 5
 
 - Word embeddings with neural networks
+  - Continuous bag-of-words model (CBOW)
 
 ## Chapter 3: NLP with Sequence Models
+
+### Week 6
+
+- Neural Networks for Sentiment Analysis
+  - Trax
+- RNN for language modeling
 
 ## Chapter 4: NLP with Attention Models
