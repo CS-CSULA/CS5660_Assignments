@@ -8,7 +8,7 @@
 
 ## Chapter 0
 
-- [C1_W1](assignments/C0_W1/)
+- [C0_W1](assignments/C0_W1/)
 
 ## Chapter 1: NLP with Classification and Vector Spaces
 
