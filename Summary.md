@@ -45,8 +45,23 @@
 - Neural Networks for Sentiment Analysis
   - Trax
 - RNN for language modeling
-  - N-grams
-  - Gated recurrent units (GRU)
   - Recurrent neural networks (RNN)
+  - Gated recurrent units (GRUs)
+  - Bi-directional RNNs
+  - Deep RNN
+
+### Week 7
+
+- LSTMs and Named Entity Recognition (NER)
+  - LSTM
+  - NER
+- Siamese Networks
+  - Triplet loss
+  - Cosine similarity
+  - Siamese networks
 
 ## Chapter 4: NLP with Attention Models
+
+### Week 8
+
+- NLP with Attention Models
