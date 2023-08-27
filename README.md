@@ -6,6 +6,10 @@
 
 # <p align="center">CS5660 Assignment Links</p>
 
+## Chapter 0
+
+- [C1_W1](assignments/C0_W1/)
+
 ## Chapter 1: NLP with Classification and Vector Spaces
 
 - [C1_W1](assignments/C1_W1/)
