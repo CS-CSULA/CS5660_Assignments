@@ -1,25 +1,26 @@
-# Standford Town
+# Final Project
 
-## Instruction
+As we get closer to the end of the semester, we'd like to have everyone start thinking about the final project. The final project is essentially the last assignment, so you don't have to start the technical part immediately (though of course, you can start whenever you'd like if you have the time!). However, we'd like to ensure you have the team, topic, and some understanding of what's been done for the problem and datasets you'd use so that you're ready once this period starts.
 
-Standford Town is the simulation of human behavior in a small town. The generative agents are derived by Large Language Model (LLM), for example, [OpenAI GPT](https://platform.openai.com/).
+Here are some comments/guidelines/due dates:
 
-## Idea
+## Teaming
 
-- The original idea comes from the research paper:
-    - Paper: Generative Agents: Interactive Simulacra of Human Behavior
-    - Code: https://github.com/joonspk-research/generative_agents
-- [AI Town of a16z](https://github.com/a16z-infra/ai-town) is an open-source AI agent framework
-- Another good and open-source project: [AgentSims](https://www.agentsims.com/)
-- A similar paper for your idea: [GPTeam](https://github.com/101dotxyz/GPTeam)
-- [Voyager](https://voyager.minedojo.org/) is an Open-Ended Embodied Agent with Large Language Models
+- Project Proposal: We will create a discussion topic in canvas for everyone to submit their team information, topics, proposed approaches, etc. This will be required for the [project proposal](proposal.md).
 
-## Purpose
+- Teaming Channel:
 
-1. Read and understand the above papers about the idea of how AI agents work in the town.
-2. Reproduce the AI town with your understanding.
-3. Try to interact with the agents in the town as a user.
+  - If you have an idea and would like to create a team, please put potential topics/interests so that others can join your team.
+  
+  - If you'd like to introduce yourself to be picked up by a team, you can sell yourself on discord's teaming channel.
+  
+  - If you find a team or the team is full, please add a "green checking mark" to the thread to let others know.
 
+## Project Ideas
+
+- You can come up with any topic you'd like! Below are some suggestions if you are having trouble coming up with one (again you are not limited to them). I highly recommend watching interesting talks, reading papers, etc. to get ideas.
+
+- I will be posted a couple of [project ideas](./ideas.md) so that you can pick one up among them if you/your team do not have any ideas.
 
 ## Rubrics
 
