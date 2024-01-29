@@ -4,14 +4,6 @@
 
 ---
 
-## Pre-trained Model
-
-Pre-trained model is provided and could be download from [google drive](https://drive.google.com/drive/folders/1ghRMIO2XVc6nsIon5Q5OTcZUINgbJPyd?usp=share_link)
-
-- `model.weights.npy.gz`: put it under `./C4_W2/` folder.
-
-Note: do **NOT** push pre-train model and dataset files to github repo, otherwise autograder can not download your repo.
-
 ## Lab
 
 - Attention
@@ -20,7 +12,11 @@ Note: do **NOT** push pre-train model and dataset files to github repo, otherwis
   
 - The Transformer Decoder
 
-  In this notebook you'll explore the transformer decoder and how to implement it with trax.
+  In this notebook you'll explore the transformer decoder and how to implement it with trax.s
+
+- Positional encoding
+
+  In this lab you will explore the positional encoding, which helps transformer to understand where in the sentence the individual words are located.
 
 ## Assignment
 

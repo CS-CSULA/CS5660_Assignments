@@ -36,7 +36,6 @@
 - [C4_W1](assignments/C4_W1/)
 - [C4_W2](assignments/C4_W2/)
 - [C4_W3](assignments/C4_W3/)
-- [C4_W4](assignments/C4_W4/)
 
 # Final Project
 

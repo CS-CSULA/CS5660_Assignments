@@ -1,940 +1,654 @@
-# -*- coding: utf-8 -*-
+import math
+from itertools import combinations
+import tensorflow as tf
 import numpy as np
-import random
-import trax
-from trax import layers as tl
-from trax.fastmath import numpy as fastnp
-from trax.supervised import training
-from trax import shapes
-from jax.random import PRNGKey
+from dlai_grader.grading import test_case, print_feedback
+from utils import train_data
 
-import glob
-import os
-import re
-import pickle
+VOCAB_SIZE = 12000
+UNITS = 256
 
 
-VOCAB_FILE = "ende_32k.subword"
-VOCAB_DIR = "data/"
+def test_encoder(encoder_to_test):
+    def g():
+        vocab_sizes = [5, 20, 1000, 15000]
+        units = [32, 64, 256, 512]
+
+        cases = []
+
+        vocab_size = 15000
+        n_units = 512
+        encoder = encoder_to_test(vocab_size, n_units)
+
+        t = test_case()
+        if encoder.embedding.mask_zero != True:
+            t.failed = True
+            t.msg = "Embedding layer has incorrect value for 'mask_zero' attribute"
+            t.want = True
+            t.got = encoder.embedding.mask_zero
+        cases.append(t)
+
+        for vs, u in zip(vocab_sizes, units):
+            encoder = encoder_to_test(vs, u)
+
+            t = test_case()
+            if encoder.embedding.input_dim != vs:
+                t.failed = True
+                t.msg = "Incorrect input dim of embedding layer"
+                t.want = vs
+                t.got = encoder.embedding.input_dim
+            cases.append(t)
+
+            t = test_case()
+            if encoder.embedding.output_dim != u:
+                t.failed = True
+                t.msg = "Incorrect output dim of embedding layer"
+                t.want = u
+                t.got = encoder.embedding.output_dim
+            cases.append(t)
+
+        t = test_case()
+        if not isinstance(encoder.rnn.layer, tf.keras.layers.LSTM):
+            t.failed = True
+            t.msg = "Incorrect type of layer inside Bidirectional"
+            t.want = tf.keras.layers.LSTM
+            t.got = type(encoder.rnn.layer)
+            return [t]
+
+        for u in units:
+            encoder = encoder_to_test(vocab_size, u)
+            t = test_case()
+            if encoder.rnn.layer.units != u:
+                t.failed = True
+                t.msg = "Incorrect number of units in LSTM layer"
+                t.want = u
+                t.got = encoder.rnn.layer.units
+            cases.append(t)
+
+        t = test_case()
+        if encoder.rnn.layer.return_sequences != True:
+            t.failed = True
+            t.msg = "LSTM layer has incorrect value for 'return_sequences' attribute"
+            t.want = True
+            t.got = encoder.rnn.layer.return_sequences
+        cases.append(t)
+
+        encoder = encoder_to_test(vocab_size, n_units)
+
+        for (to_translate, _), _ in train_data.take(3):
+            first_dim_in, second_dim_in = to_translate.shape
+            encoder_output = encoder(to_translate)
+            t = test_case()
+            if len(encoder_output.shape) != 3:
+                t.failed = True
+                t.msg = "Incorrect shape of encoder output"
+                t.want = "a shape with 3 dimensions"
+                t.got = encoder_output.shape
+                return [t]
+
+            first_dim_out, second_dim_out, third_dim_out = encoder_output.shape
+
+            t = test_case()
+            if first_dim_in != first_dim_out:
+                t.failed = True
+                t.msg = "Incorrect first dimension of encoder output"
+                t.want = first_dim_in
+                t.got = first_dim_out
+            cases.append(t)
+
+            t = test_case()
+            if second_dim_in != second_dim_out:
+                t.failed = True
+                t.msg = "Incorrect second dimension of encoder output"
+                t.want = second_dim_in
+                t.got = second_dim_out
+            cases.append(t)
+
+            t = test_case()
+            if third_dim_out != n_units:
+                t.failed = True
+                t.msg = "Incorrect third dimension of encoder output"
+                t.want = units
+                t.got = third_dim_out
+            cases.append(t)
+
+            return cases
+
+    cases = g()
+    print_feedback(cases)
 
 
-def test_input_encoder_fn(target):
-    success = 0
-    fails = 0
+def test_cross_attention(cross_attention_to_test):
+    def g():
+        units = [32, 64, 256, 512]
 
-    input_vocab_size = 10
-    d_model = 2
-    n_encoder_layers = 6
+        cases = []
 
-    encoder = target(input_vocab_size, d_model, n_encoder_layers)
-    lstms = "\n".join([f"  LSTM_{d_model}"] * n_encoder_layers)
+        n_units = 512
+        cross_attention = cross_attention_to_test(n_units)
 
-    expected = f"Serial[\n  Embedding_{input_vocab_size}_{d_model}\n{lstms}\n]"
+        t = test_case()
+        if not isinstance(cross_attention.mha, tf.keras.layers.MultiHeadAttention):
+            t.failed = True
+            t.msg = "Incorrect type of layer for Multi Head Attention"
+            t.want = tf.keras.layers.MultiHeadAttention
+            t.got = type(cross_attention.mha)
+            return [t]
 
-    proposed = str(encoder)
+        #         for u in units:
+        #             cross_attention = cross_attention_to_test(u)
 
-    # Test all layers are in the expected sequence
-    try:
-        assert proposed.replace(" ", "") == expected.replace(" ", "")
-        success += 1
-    except:
-        fails += 1
-        print("Wrong model. \nProposed:\n%s" % proposed, "\nExpected:\n%s" % expected)
+        #             t = test_case()
+        #             if cross_attention.mha.key_dim != u:
+        #                 t.failed = True
+        #                 t.msg = "Incorrect key dim of Multi Head Attention layer"
+        #                 t.want = u
+        #                 t.got = cross_attention.mha.key_dim
+        #             cases.append(t)
 
-    # Test the output type
-    try:
-        assert isinstance(encoder, trax.layers.combinators.Serial)
-        success += 1
-        # Test the number of layers
-        try:
-            # Test
-            assert len(encoder.sublayers) == (n_encoder_layers + 1)
-            success += 1
-        except:
-            fails += 1
-            print(
-                "The number of sublayers does not match %s <>" % len(encoder.sublayers),
-                " %s" % (n_encoder_layers + 1),
+        cross_attention = cross_attention_to_test(n_units)
+        embed = tf.keras.layers.Embedding(VOCAB_SIZE, output_dim=UNITS, mask_zero=True)
+
+        for (to_translate, sr_translation), _ in train_data.take(3):
+            sr_translation_embed = embed(sr_translation)
+            first_dim_in, second_dim_in, third_dim_in = sr_translation_embed.shape
+            dummy_encoder_output = np.random.rand(64, 14, 512)
+            cross_attention_output = cross_attention(
+                dummy_encoder_output, sr_translation_embed
             )
-    except:
-        fails += 1
-        print("The enconder is not an object of ", trax.layers.combinators.Serial)
+            #             print(cross_attention_output.shape)
 
-    #----------------------------    
-    input_vocab_size = 15
-    d_model = 5
-    n_encoder_layers = 4
+            t = test_case()
+            if len(cross_attention_output.shape) != 3:
+                t.failed = True
+                t.msg = "Incorrect shape of cross_attention output"
+                t.want = "a shape with 3 dimensions"
+                t.got = cross_attention_output.shape
+                return [t]
 
-    encoder = target(input_vocab_size, d_model, n_encoder_layers)
-    lstms = "\n".join([f"  LSTM_{d_model}"] * n_encoder_layers)
+            first_dim_out, second_dim_out, third_dim_out = cross_attention_output.shape
 
-    expected = f"Serial[\n  Embedding_{input_vocab_size}_{d_model}\n{lstms}\n]"
+            t = test_case()
+            if first_dim_in != first_dim_out:
+                t.failed = True
+                t.msg = "Incorrect first dimension of cross_attention output"
+                t.want = first_dim_in
+                t.got = first_dim_out
+            cases.append(t)
 
-    proposed = str(encoder)
+            t = test_case()
+            if second_dim_in != second_dim_out:
+                t.failed = True
+                t.msg = "Incorrect second dimension of cross_attention output"
+                t.want = second_dim_in
+                t.got = second_dim_out
+            cases.append(t)
 
-    # Test all layers are in the expected sequence
-    try:
-        assert proposed.replace(" ", "") == expected.replace(" ", "")
-        success += 1
-    except:
-        fails += 1
-        print("Wrong model. \nProposed:\n%s" % proposed, "\nExpected:\n%s" % expected)
+            t = test_case()
+            if third_dim_in != third_dim_out:
+                t.failed = True
+                t.msg = "Incorrect third dimension of cross_attention output"
+                t.want = third_dim_in
+                t.got = third_dim_out
+            cases.append(t)
 
-    # Test the output type
-    try:
-        assert isinstance(encoder, trax.layers.combinators.Serial)
-        success += 1
-        # Test the number of layers
-        try:
-            # Test
-            assert len(encoder.sublayers) == (n_encoder_layers + 1)
-            success += 1
-        except:
-            fails += 1
-            print(
-                "The number of sublayers does not match %s <>" % len(encoder.sublayers),
-                " %s" % (n_encoder_layers + 1),
-            )
-    except:
-        fails += 1
-        print("The enconder is not an object of ", trax.layers.combinators.Serial)
+        _, n_heads, key_dim = cross_attention.mha.get_weights()[0].shape
 
-        
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
+        t = test_case()
+        if n_heads != 1:
+            t.failed = True
+            t.msg = "Incorrect number of attention heads"
+            t.want = 1
+            t.got = n_heads
+        cases.append(t)
+
+        t = test_case()
+        if key_dim != n_units:
+            t.failed = True
+            t.msg = f"Incorrect size of query and key for every attention head when passing {n_units} units to the constructor"
+            t.want = n_units
+            t.got = key_dim
+        cases.append(t)
+
+        return cases
+
+    cases = g()
+    print_feedback(cases)
 
 
-def test_pre_attention_decoder_fn(target):
-    success = 0
-    fails = 0
+def test_decoder(decoder_to_test, CrossAttention):
+    def g():
+        vocab_sizes = [5, 20, 1000, 15000]
+        units = [32, 64, 256, 512]
 
-    mode = "train"
-    target_vocab_size = 10
-    d_model = 2
+        cases = []
 
-    decoder = target(mode, target_vocab_size, d_model)
+        vocab_size = 10000
+        n_units = 512
+        decoder = decoder_to_test(vocab_size, n_units)
 
-    expected = f"Serial[\n  Serial[\n    ShiftRight(1)\n  ]\n  Embedding_{target_vocab_size}_{d_model}\n  LSTM_{d_model}\n]"
+        t = test_case()
+        if not isinstance(decoder.embedding, tf.keras.layers.Embedding):
+            t.failed = True
+            t.msg = "Incorrect type of embedding layer"
+            t.want = tf.keras.layers.Embedding
+            t.got = type(decoder.embedding)
+            return [t]
 
-    proposed = str(decoder)
+        t = test_case()
+        if decoder.embedding.mask_zero != True:
+            t.failed = True
+            t.msg = "Embedding layer has incorrect value for 'mask_zero' attribute"
+            t.want = True
+            t.got = decoder.embedding.mask_zero
+        cases.append(t)
 
-    # Test all layers are in the expected sequence
-    try:
-        assert proposed.replace(" ", "") == expected.replace(" ", "")
-        success += 1
-    except:
-        fails += 1
-        print("Wrong model. \nProposed:\n%s" % proposed, "\nExpected:\n%s" % expected)
+        for vs, u in zip(vocab_sizes, units):
+            decoder = decoder_to_test(vs, u)
 
-    # Test the output type
-    try:
-        assert isinstance(decoder, trax.layers.combinators.Serial)
-        success += 1
-        # Test the number of layers
-        try:
-            # Test
-            assert len(decoder.sublayers) == 3
-            success += 1
-        except:
-            fails += 1
-            print(
-                "The number of sublayers does not match %s <>" % len(decoder.sublayers),
-                " %s" % 3,
-            )
-    except:
-        fails += 1
-        print("The enconder is not an object of ", trax.layers.combinators.Serial)
+            t = test_case()
+            if decoder.embedding.input_dim != vs:
+                t.failed = True
+                t.msg = "Incorrect input dim of embedding layer"
+                t.want = vs
+                t.got = decoder.embedding.input_dim
+            cases.append(t)
 
-    #----------------------------
-    mode = "train"
-    target_vocab_size = 20
-    d_model = 5
+            t = test_case()
+            if decoder.embedding.output_dim != u:
+                t.failed = True
+                t.msg = "Incorrect output dim of embedding layer"
+                t.want = u
+                t.got = decoder.embedding.output_dim
+            cases.append(t)
 
-    decoder = target(mode, target_vocab_size, d_model)
+        t = test_case()
+        if not isinstance(decoder.pre_attention_rnn, tf.keras.layers.LSTM):
+            t.failed = True
+            t.msg = "Incorrect type of pre_attention_rnn layer"
+            t.want = tf.keras.layers.LSTM
+            t.got = type(decoder.pre_attention_rnn)
+            return [t]
 
-    expected = f"Serial[\n  Serial[\n    ShiftRight(1)\n  ]\n  Embedding_{target_vocab_size}_{d_model}\n  LSTM_{d_model}\n]"
+        for u in units:
+            decoder = decoder_to_test(vocab_size, u)
+            t = test_case()
+            if decoder.pre_attention_rnn.units != u:
+                t.failed = True
+                t.msg = "Incorrect number of units in pre_attention_rnn layer"
+                t.want = u
+                t.got = decoder.pre_attention_rnn.units
+            cases.append(t)
 
-    proposed = str(decoder)
+            #             t = test_case()
+            #             if decoder.attention.units != u:
+            #                 t.failed = True
+            #                 t.msg = "Incorrect number of units in attention layer"
+            #                 t.want = u
+            #                 t.got = decoder.attention.units
+            #             cases.append(t)
 
-    # Test all layers are in the expected sequence
-    try:
-        assert proposed.replace(" ", "") == expected.replace(" ", "")
-        success += 1
-    except:
-        fails += 1
-        print("Wrong model. \nProposed:\n%s" % proposed, "\nExpected:\n%s" % expected)
+            t = test_case()
+            if decoder.post_attention_rnn.units != u:
+                t.failed = True
+                t.msg = "Incorrect number of units in post_attention_rnn layer"
+                t.want = u
+                t.got = decoder.post_attention_rnn.units
+            cases.append(t)
 
-    # Test the output type
-    try:
-        assert isinstance(decoder, trax.layers.combinators.Serial)
-        success += 1
-        # Test the number of layers
-        try:
-            # Test
-            assert len(decoder.sublayers) == 3
-            success += 1
-        except:
-            fails += 1
-            print(
-                "The number of sublayers does not match %s <>" % len(decoder.sublayers),
-                " %s" % 3,
-            )
-    except:
-        fails += 1
-        print("The enconder is not an object of ", trax.layers.combinators.Serial)
+        t = test_case()
+        if decoder.pre_attention_rnn.return_sequences != True:
+            t.failed = True
+            t.msg = "pre_attention_rnn layer has incorrect value for 'return_sequences' attribute"
+            t.want = True
+            t.got = decoder.pre_attention_rnn.return_sequences
+        cases.append(t)
+
+        t = test_case()
+        if decoder.pre_attention_rnn.return_state != True:
+            t.failed = True
+            t.msg = "pre_attention_rnn layer has incorrect value for 'return_state' attribute"
+            t.want = True
+            t.got = decoder.pre_attention_rnn.return_state
+        cases.append(t)
+
+        t = test_case()
+        if not isinstance(decoder.attention, CrossAttention):
+            t.failed = True
+            t.msg = "Incorrect type of attention layer"
+            t.want = CrossAttention
+            t.got = type(decoder.attention)
+            return [t]
+
+        t = test_case()
+        if decoder.post_attention_rnn.return_sequences != True:
+            t.failed = True
+            t.msg = "post_attention_rnn layer has incorrect value for 'return_sequences' attribute"
+            t.want = True
+            t.got = decoder.post_attention_rnn.return_sequences
+        cases.append(t)
+
+        t = test_case()
+        if not isinstance(decoder.post_attention_rnn, tf.keras.layers.LSTM):
+            t.failed = True
+            t.msg = "Incorrect type of pre_attention_rnn layer"
+            t.want = tf.keras.layers.LSTM
+            t.got = type(decoder.post_attention_rnn)
+            return [t]
+
+        t = test_case()
+        if not isinstance(decoder.output_layer, tf.keras.layers.Dense):
+            t.failed = True
+            t.msg = "Incorrect type of output_layer layer"
+            t.want = tf.keras.layers.Dense
+            t.got = type(decoder.output_layer)
+            return [t]
+
+        t = test_case()
+        if (
+            "log" not in decoder.output_layer.activation.__name__
+            or "softmax" not in decoder.output_layer.activation.__name__
+        ):
+            t.failed = True
+            t.msg = "output_layer layer has incorrect activation function"
+            t.want = "a log softmax activation function such as 'log_softmax_v2'"
+            t.got = decoder.output_layer.activation.__name__
+        cases.append(t)
+
+        vocab_size = 10000
+        n_units = 512
+        decoder = decoder_to_test(vocab_size, n_units)
+
+        for (_, sr_translation), _ in train_data.take(3):
+            encoder_output = np.random.rand(64, 15, 256)
+            decoder_output = decoder(encoder_output, sr_translation)
+
+            first_dim_in, second_dim_in = sr_translation.shape
+
+            t = test_case()
+            if len(decoder_output.shape) != 3:
+                t.failed = True
+                t.msg = "Incorrect shape of decoder output"
+                t.want = "a shape with 3 dimensions"
+                t.got = decoder_output.shape
+                return [t]
+
+            first_dim_out, second_dim_out, third_dim_out = decoder_output.shape
+
+            t = test_case()
+            if first_dim_in != first_dim_out:
+                t.failed = True
+                t.msg = "Incorrect first dimension of decoder output"
+                t.want = first_dim_in
+                t.got = first_dim_out
+            cases.append(t)
+
+            t = test_case()
+            if second_dim_in != second_dim_out:
+                t.failed = True
+                t.msg = "Incorrect second dimension of decoder output"
+                t.want = second_dim_in
+                t.got = second_dim_out
+            cases.append(t)
+
+            t = test_case()
+            if third_dim_out != vocab_size:
+                t.failed = True
+                t.msg = "Incorrect third dimension of decoder output"
+                t.want = vocab_size
+                t.got = third_dim_out
+            cases.append(t)
+        return cases
+
+    cases = g()
+    print_feedback(cases)
+
+
+def test_translator(translator_to_test, Encoder, Decoder):
+    def g():
+        vocab_sizes = [5, 20, 1000, 15000]
+        units = [32, 64, 256, 512]
+
+        cases = []
+
+        vocab_size = 10000
+        n_units = 512
+        translator = translator_to_test(vocab_size, n_units)
+
+        t = test_case()
+        if not isinstance(translator.encoder, Encoder):
+            t.failed = True
+            t.msg = "Incorrect type of encoder layer"
+            t.want = Encoder
+            t.got = type(translator.encoder)
+            return [t]
+
+        t = test_case()
+        if not isinstance(translator.decoder, Decoder):
+            t.failed = True
+            t.msg = "Incorrect type of encoder layer"
+            t.want = Decoder
+            t.got = type(translator.decoder)
+            return [t]
+
+        translator = translator_to_test(vocab_size, n_units)
+
+        for (to_translate, sr_translation), _ in train_data.take(3):
+            first_dim_in, second_dim_in = sr_translation.shape
+            translator_output = translator((to_translate, sr_translation))
+            t = test_case()
+            if len(translator_output.shape) != 3:
+                t.failed = True
+                t.msg = "Incorrect shape of translator output"
+                t.want = "a shape with 3 dimensions"
+                t.got = translator_output.shape
+                return [t]
+
+            first_dim_out, second_dim_out, third_dim_out = translator_output.shape
+
+            t = test_case()
+            if first_dim_in != first_dim_out:
+                t.failed = True
+                t.msg = "Incorrect first dimension of translator output"
+                t.want = first_dim_in
+                t.got = first_dim_out
+            cases.append(t)
+
+            t = test_case()
+            if second_dim_in != second_dim_out:
+                t.failed = True
+                t.msg = "Incorrect second dimension of translator output"
+                t.want = second_dim_in
+                t.got = second_dim_out
+            cases.append(t)
+
+            t = test_case()
+            if third_dim_out != vocab_size:
+                t.failed = True
+                t.msg = "Incorrect third dimension of translator output"
+                t.want = vocab_size
+                t.got = third_dim_out
+            cases.append(t)
+
+            return cases
+
+    cases = g()
+    print_feedback(cases)
 
     
-    
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
 
-
-def test_prepare_attention_input(target):
-    success = 0
-    fails = 0
-
-    test_cases = [{'name': 'test_1'
-                   ,'input': {'encoder_activations': fastnp.array([
-                                            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]],
-                                            [[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 0, 0]],
-                                        ]
-                                    ),
-                             'decoder_activations': fastnp.array(
-                                            [
-                                                [[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0]],
-                                                [[2, 0, 2, 0], [0, 2, 0, 2], [0, 0, 0, 0]],
-                                            ]
-                                        ),
-                             'inputs': fastnp.array([[1, 2, 3], [1, 4, 0]])
-                            }
-                    ,'expected': {'enc_act': fastnp.array([
-                                            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0]],
-                                            [[1, 0, 1, 0], [0, 1, 0, 1], [0, 0, 0, 0]],
-                                        ]
-                                    ),
-                             'dec_act': fastnp.array(
-                                            [
-                                                [[2, 0, 0, 0], [0, 2, 0, 0], [0, 0, 2, 0]],
-                                                [[2, 0, 2, 0], [0, 2, 0, 2], [0, 0, 0, 0]],
-                                            ]
-                                        ),
-                             'exp_mask': fastnp.array(
-                                                    [
-                                                        [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]],
-                                                        [[[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [1.0, 1.0, 0.0]]],
-                                                    ]
-                                                )
-                                }
-                  }, 
-                  {'name': 'test_2'
-                   ,'input': {'encoder_activations': fastnp.array(
-                                                        [
-                                                            [[1, 0, 0,], [0, 1, 0,], [0, 0, 1,]],
-                                                            [[1, 0, 1,], [0, 1, 0,], [0, 0, 0,]],
-                                                        ]
-                                                    )
-                             , 'decoder_activations': fastnp.array(
-                                                        [
-                                                            [[2, 0, 0,], [0, 2, 0,], [0, 0, 2,]],
-                                                            [[2, 0, 2,], [0, 2, 0,], [0, 0, 0,]],
-                                                        ]
-                                                    )
-                             , 'inputs': fastnp.array([[1, 2, 3], [1, 4, 0]])
-                            }
-                    ,'expected': {'enc_act': fastnp.array(
-                                                    [
-                                                        [[1, 0, 0,], [0, 1, 0,], [0, 0, 1,]],
-                                                        [[1, 0, 1,], [0, 1, 0,], [0, 0, 0,]],
-                                                    ]
-                                                )
-                                  , 'dec_act': fastnp.array(
-                                                    [
-                                                        [[2, 0, 0,], [0, 2, 0,], [0, 0, 2,]],
-                                                        [[2, 0, 2,], [0, 2, 0,], [0, 0, 0,]],
-                                                    ]
-                                                )
-                                  , 'exp_mask': fastnp.array(
-                                                        [
-                                                            [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]],
-                                                            [[[1.0, 1.0, 0.0], [1.0, 1.0, 0.0], [1.0, 1.0, 0.0]]],
-                                                        ]
-                                                    )
-                                }
-                  },
-                  {'name': 'test_3'
-                   ,'input': {'encoder_activations': fastnp.array(
-                                                        [
-                                                            [[1, 0,0], [0, 1, 0],],
-                                                            [[1, 0,1], [0, 1, 0],],
-                                                        ]
-                                                    )
-                             , 'decoder_activations': fastnp.array(
-                                                            [
-                                                                [[2, 0,0], [0, 2,0],],
-                                                                [[2, 0,2], [0, 2,0],],
-                                                            ]
-                                                        )
-                             , 'inputs': fastnp.array([[1, 2, 3], [1, 4, 0]])
-                             }
-                    ,'expected': {'enc_act': fastnp.array(
-                                                    [
-                                                        [[1, 0,0], [0, 1, 0],],
-                                                        [[1, 0,1], [0, 1, 0],],
-                                                    ]
-                                                )
-                                  , 'dec_act': fastnp.array(
-                                                    [
-                                                        [[2, 0,0], [0, 2,0],],
-                                                        [[2, 0,2], [0, 2,0],],
-                                                    ]
-                                                )
-                                  , 'exp_mask': fastnp.array(
-                                                        [
-                                                            [[[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]]],
-                                                            [[[1.0, 1.0, 0.0], [1.0, 1.0, 0.0]]],
-                                                        ]
-                                                    )
-                                 }
-                  },
-                ]    
-                
-    for test_case in test_cases:
-        exp_type = type(test_case['expected']['enc_act'])
-
-        queries, keys, values, mask = target(**test_case['input'])
+def test_translate(learner_func, model):
+    def g():
         
-    try:
-        assert fastnp.allclose(queries, test_case['expected']['dec_act'])
-        success += 1
-    except:
-        fails += 1
-        print("Queries does not match the decoder activations")
-    try:
-        assert fastnp.allclose(keys, test_case['expected']['enc_act'])
-        success += 1
-    except:
-        fails += 1
-        print("Keys does not match the encoder activations")
-    try:
-        assert fastnp.allclose(values, test_case['expected']['enc_act'])
-        success += 1
-    except:
-        fails += 1
-        print("Values does not match the encoder activations")
-    try:
-        assert fastnp.allclose(mask, test_case['expected']['exp_mask'])
-        success += 1
-    except:
-        fails += 1
-        print(
-            "Mask does not match expected tensor. \nExpected:\n%s" % test_case['expected']['exp_mask'],
-            "\nOutput:\n%s" % mask,
-        )
-
-    # Test the output type
-    try:
-        assert isinstance(queries, exp_type)
-        assert isinstance(keys, exp_type)
-        assert isinstance(values, exp_type)
-        assert isinstance(mask, exp_type)
-        success += 1
-    except:
-        fails += 1
-        print(
-            "One of the output object are not of type ",
-            jax.interpreters.xla.DeviceArray,
-        )
+        cases = []
         
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
-
-
-
-def test_NMTAttn(target):
-    test_cases = [{'name': 'default_test_check'
-                   , 'input': {}
-                   , 'expected': {'str_rep': "Serial_in2_out2[\n  Select[0,1,0,1]_in2_out4\n  Parallel_in2_out2[\n    Serial[\n      Embedding_33300_1024\n      LSTM_1024\n      LSTM_1024\n    ]\n    Serial[\n      Serial[\n        ShiftRight(1)\n      ]\n      Embedding_33300_1024\n      LSTM_1024\n    ]\n  ]\n  PrepareAttentionInput_in3_out4\n  Serial_in4_out2[\n    Branch_in4_out3[\n      None\n      Serial_in4_out2[\n        _in4_out4\n        Serial_in4_out2[\n          Parallel_in3_out3[\n            Dense_1024\n            Dense_1024\n            Dense_1024\n          ]\n          PureAttention_in4_out2\n          Dense_1024\n        ]\n        _in2_out2\n      ]\n    ]\n    Add_in2\n  ]\n  Select[0,2]_in3_out2\n  LSTM_1024\n  LSTM_1024\n  Dense_33300\n  LogSoftmax\n]"
-                                 , 'n_sublayers': 9
-                                 , 'selection_layer':  ["Select[0,1,0,1]_in2_out4", "Select[0,2]_in3_out2"]
-                                 }
-                  },
-                  {'name': 'default_test_check'
-                   , 'input': {'input_vocab_size':100,
-                                'target_vocab_size':100,
-                                'd_model':16,
-                                'n_encoder_layers':3,
-                                'n_decoder_layers':3,
-                                'n_attention_heads':2,
-                                'attention_dropout':0.01,
-                                'mode':'train'}
-                   , 'expected': {'str_rep': "Serial_in2_out2[\n  Select[0,1,0,1]_in2_out4\n  Parallel_in2_out2[\n    Serial[\n      Embedding_100_16\n      LSTM_16\n      LSTM_16\n      LSTM_16\n    ]\n    Serial[\n      Serial[\n        ShiftRight(1)\n      ]\n      Embedding_100_16\n      LSTM_16\n    ]\n  ]\n  PrepareAttentionInput_in3_out4\n  Serial_in4_out2[\n    Branch_in4_out3[\n      None\n      Serial_in4_out2[\n        _in4_out4\n        Serial_in4_out2[\n          Parallel_in3_out3[\n            Dense_16\n            Dense_16\n            Dense_16\n          ]\n          PureAttention_in4_out2\n          Dense_16\n        ]\n        _in2_out2\n      ]\n    ]\n    Add_in2\n  ]\n  Select[0,2]_in3_out2\n  LSTM_16\n  LSTM_16\n  LSTM_16\n  Dense_100\n  LogSoftmax\n]"
-                                 , 'n_sublayers': 10
-                                 , 'selection_layer':  ["Select[0,1,0,1]_in2_out4", "Select[0,2]_in3_out2"]
-                                 }
-                  },
-                 ]
-                 
-    # f"Serial_in2_out2[\n  Select[0,1,0,1]_in2_out4\n  Parallel_in2_out2[\n    Serial[\n      Embedding_100_16\n      LSTM_16\n      LSTM_16\n      LSTM_16\n    ]\n    Serial[\n      Serial[\n        ShiftRight(1)\n      ]\n      Embedding_100_16\n      LSTM_16\n    ]\n  ]\n  PrepareAttentionInput_in3_out4\n  Serial_in4_out2[\n    Branch_in4_out3[\n      None\n      Serial_in4_out2[\n        _in4_out4\n        Serial_in4_out2[\n          Parallel_in3_out3[\n            Dense_16\n            Dense_16\n            Dense_16\n          ]\n          PureAttention_in4_out2\n          Dense_16\n        ]\n        _in2_out2\n      ]\n    ]\n    Add_in2\n  ]\n  Select[0,2]_in3_out2\n  LSTM_16\n  LSTM_16\n  LSTM_16\n  Dense_100\n  LogSoftmax\n]"
+        txt = "Hi, my name is Younes"
+        try:
+            translation, logit, tokens = learner_func(model, txt, temperature=0.9)
+        except Exception as e:
+            t = test_case()
+            t.failed = True
+            t.msg = "There was an exception when running your function"
+            t.want = "No exceptions"
+            t.got = f"{str(e)}"
+            return [t]
+        
+        txt = "Hi, my name is Alejandra"
+        translation, logit, tokens = learner_func(model, txt, temperature=0.0)
+        
+        t = test_case()
+        
+        if not isinstance(translation, str):
+            t.failed = True
+            t.msg = "'translation' has incorrect type"
+            t.want = str
+            t.got = type(translation)
+        cases.append(t)
+        
+        if not isinstance(logit, np.number):
+            t.failed = True
+            t.msg = "'logit' has incorrect type"
+            t.want = np.number
+            t.got = type(logit)
+        cases.append(t)
+        
+        if not isinstance(tokens, tf.Tensor):
+            t.failed = True
+            t.msg = "'tokens' has incorrect type"
+            t.want = tf.Tensor
+            t.got = type(tokens)
+        cases.append(t)
+        
+        translation2, logit2, tokens2 = learner_func(model, txt, temperature=0.0)
+        
+        t = test_case()
+        if translation != translation2:
+            t.failed = True
+            t.msg = "translate didn't return the same translation when using temperature of 0.0"
+            t.want = translation
+            t.got = translation2
+        cases.append(t)
+        
+        t = test_case()
+        if logit != logit2:
+            t.failed = True
+            t.msg = "translate didn't return the same logit when using temperature of 0.0"
+            t.want = logit
+            t.got = logit2
+        cases.append(t)
+        
+        t = test_case()
+        if not np.allclose(tokens, tokens2):
+            t.failed = True
+            t.msg = "translate didn't return the same tokens when using temperature of 0.0"
+            t.want = tokens
+            t.got = tokens2
+        cases.append(t)
+        
+        
+        return cases
     
-    success = 0
-    fails = 0
+    cases = g()
+    print_feedback(cases)
 
-    for test_case in test_cases:
-        result = target(**test_case['input'])
-        try:            
-            assert test_case["expected"]["str_rep"] == str(result)
-            success += 1
-        except:
-            print(f"The NMTAttn model is not defined properly.\n\tExpected {test_case['expected']['str_rep']}.\n\tGot {str(result)}.")            
-            fails += 1
+    
+
+
+def test_rouge1_similarity(learner_func):
+    
+    def g():
+        
+        tensors = [
+            [0],
+            [0, 1],
+            [0, 1, 2],
+            [1, 2, 4, 5],
+            [5, 5, 7, 0, 232]
+        ]
+        
+        expected = [0.6666666666666666, 0.5, 0, 0.33333333333333337, 0.8, 0.3333333333333333, 0.28571428571428575, 0.5714285714285715, 0.25]
+
+        cases = []
+        pairs = list(combinations(tensors, 2))
+        
+        for (candidate, reference), solution in zip(pairs, expected):
+            answer = learner_func(candidate, reference)
+            t = test_case()
+            if not math.isclose(answer, solution):
+                t.failed = True
+                t.msg = f"Incorrect similarity for candidate={candidate} and reference={reference}"
+                t.want = solution
+                t.got = answer
+            cases.append(t)
+
+        return cases
+    
+    cases = g()
+    print_feedback(cases)
+
+
+def test_average_overlap(learner_func):
+
+    def jaccard_similarity(candidate, reference):
+        
+        # Convert the lists to sets to get the unique tokens
+        candidate_set = set(candidate)
+        reference_set = set(reference)
+        
+        # Get the set of tokens common to both candidate and reference
+        common_tokens = candidate_set.intersection(reference_set)
+        
+        # Get the set of all tokens found in either candidate or reference
+        all_tokens = candidate_set.union(reference_set)
+        
+        # Compute the percentage of overlap (divide the number of common tokens by the number of all tokens)
+        overlap = len(common_tokens) / len(all_tokens)
             
-        try:
-            assert test_case["expected"]["n_sublayers"] == len(result.sublayers)
-            success += 1
-        except:
-            print(f"There are {len(result.sublayers)} layers in your model. There should be {test_case['expected']['n_sublayers']}.\nCheck the LSTM stack before the dense layer")
-            fails += 1
-        
-        
-        output = [str(result.sublayers[0]), str(result.sublayers[4])]
-        check_count = 0
-
-        for i in range(len(test_case['expected']['selection_layer'])):
-            if test_case['expected']['selection_layer'][i] != output[i]:
-                print(f"There is a problem with your selection layers.\n\t Expected {test_case['expected']['selection_layer'][i]}.\n\tGot {output[i]}.")
-                fails += 1
-                break
-            else:
-                check_count += 1
-
-        if check_count == len(test_case['expected']['selection_layer']):
-            success += len(test_case['expected']['selection_layer'])
-        
-
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
-
-
-def my_gen():
-    while True:
-        lng1 = random.randrange(16, 64)
-        sample1 = np.random.randint(2, 2000, lng1)
-        sample1[lng1 - 1] = 1
-        lng2 = random.randrange(16, 64)
-        sample2 = np.random.randint(2, 2000, lng2)
-        sample2[lng2 - 1] = 1
-        yield sample1, sample2
-
-
-# test train_task
-def test_train_task(target):
-
-    train_batch_stream_test = trax.data.BucketByLength(
-        [64],
-        [32],  # boundaries, batch_sizes,
-        length_keys=[0, 1],  # As before: count inputs and targets to length.
-    )(my_gen())
-
-    train_batch_stream_test = trax.data.AddLossWeights(id_to_mask=0)(
-        train_batch_stream_test
-    )
-
-    train_task = target(train_batch_stream_test)
-
-    success = 0
-    fails = 0
-
-    # Test the labeled data parameter
-    try:
-        strlabel = str(train_task._labeled_data)
-        assert strlabel.find("generator") and strlabel.find("add_loss_weights")
-        success += 1
-    except:
-        fails += 1
-        print("Wrong labeled data parameter")
-
-    # Test the cross entropy loss data parameter
-    try:
-        strlabel = str(train_task._loss_layer)
-        assert strlabel == "CrossEntropyLoss_in3"
-        success += 1
-    except:
-        fails += 1
-        print("Wrong loss functions. CrossEntropyLoss_in3 was expected")
-
-    # Test the optimizer parameter
-    try:
-        assert isinstance(train_task.optimizer, trax.optimizers.adam.Adam)
-        success += 1
-    except:
-        fails += 1        
-        print("Wrong optimizer")
-        
-    opt_params_dict = {'weight_decay_rate': fastnp.array(1.e-5),
-                         'b1': fastnp.array(0.9),
-                         'b2': fastnp.array(0.999),
-                         'eps': fastnp.array(1.e-5),
-                         'learning_rate': fastnp.array(0.01)}
+        return overlap
     
-    try: 
-        assert train_task._optimizer.opt_params == opt_params_dict
-        success += 1
-    except:
-        fails += 1
-        print(f"Optimizer has the wrong parameters.\n\tExpected {opt_params_dict}.\n\tGot {train_task._optimizer.opt_params}.")
-
-    # Test the schedule parameter
-    try:
-        assert isinstance(
-            train_task._lr_schedule, trax.supervised.lr_schedules._BodyAndTail
-        )
-        success += 1
-    except:
-        fails += 1
-        print("Wrong learning rate schedule type")
+    def g():
         
-    try: 
-        assert train_task._lr_schedule._body_value == 0.01
-        success += 1
-    except:
-        fails += 1
-        print(f'Wrong learning rate value.\n\tExpected 0.01.\n\tGot {train_task._lr_schedule._body_value}.')
+        l1 = [1, 2, 3]
+        l2 = [1, 2, 4]
+        l3 = [1, 2, 4, 5]
+        l4 = [5,6]
 
-    # Test the _n_steps_per_checkpoint parameter
-    try:
-        assert train_task._n_steps_per_checkpoint == 10
-        success += 1
-    except:
-        fails += 1
-        print("Wrong checkpoint step frequency")
+        elements = [l1, l2, l3, l4]
 
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
+        all_combinations = []
 
-
-def test_next_symbol(target, model):
-    # Generating input for signature initialization
-
-    tokens_en = np.array([[17332, 140, 172, 207, 1]])
-    cur_output_tokens = []
-    token_length = len(cur_output_tokens)
-    padded_length = 2 ** int(np.ceil(np.log2(token_length + 1)))
-    padded = cur_output_tokens + [0] * (
-        padded_length - token_length
-    )  # @REPLACE padded = cur_output_tokens + None
-    padded_with_batch = np.array(padded)[None, :]
-
-    # Initializing the model with the provided signatures
-    seed = 12345
-    the_model = model(mode="eval")
-    the_model.init(
-        (shapes.signature(tokens_en), shapes.signature(padded_with_batch)),
-        rng=PRNGKey(seed),
-        use_cache=False,
-    )
-
-    next_de_tokens = target(the_model, tokens_en, [], 0.0)
-    assert isinstance(next_de_tokens, tuple), "Output must be a tuple"
-    assert len(next_de_tokens) == 2, "Size of tuple must be 2"
-    assert type(next_de_tokens[0]) == int and type(next_de_tokens[1]) == float, "Tuple must contain an integer and a float number"
-    
-    # Test an output
-    next_de_tokens = target(the_model, tokens_en, [18477], 0.0)
-    # print('next_de_tokens', next_de_tokens)
-    assert np.allclose([next_de_tokens[0], next_de_tokens[1]], [7283, -9.929085731506348]), f"Expected output: [{7283}, {-9.929085731506348}], your output: [{next_de_tokens[0]}, {next_de_tokens[1]}]"
-    
-    print("\033[92m All tests passed")
-
-
-class next_symbol_mock:
-    """Class that represents a mock of the funcion next_symbol.     
-
-
-    Attributes:    
-        path_test_files (str): path of directory that contains .pkl files.    
-
-    Methods:    
-        read_path_test_files(): Reads the files in .pkl format with 
-            the actual input/output mapping
-
-        mocked_fn(NMTAttn=None
-            , input_tokens=None
-            , cur_output_tokens=None
-            , temperature=0.0): Returns the input/output mapping.
-    """
-
-    def __init__(self, path_test_files):
-        self.path_test_files = path_test_files
-        self.dict_in_out_map = self.read_path_test_files()
-
-    def read_path_test_files(self):
-        """Reads files in .pkl format.
-                
-        Returns:
-            dict: Dictionary that maps the input and output directly.
-        """
-
-        dict_raw_output = {}
-        # print(os.getcwd())
-        # print(self.path_test_files)
-        for filename in glob.glob(os.path.join(self.path_test_files, "*.pkl")):
-            filename_number = int(re.findall("[0-9]+", filename)[0])
-            # print('filename', filename)
-            # print('filename_number', filename_number)
-            with open(filename, "rb") as f:
-                dict_raw_output.update(pickle.load(f))
-
-        return dict_raw_output
-
-    def mocked_fn(
-        self, NMTAttn=None, input_tokens=None, cur_output_tokens=None, temperature=0.0
-    ):
-        """Returns the input/output mapping using the dictionary that 
-        was read in read_path_test_files().
-
-        Args:
-            NMTAttn (tl.Serial): Instantiated model. This parameter is not actually used but 
-                is left as the learner implementation requires it.
-            input_tokens (np.ndarray 1 x n_tokens): tokenized representation of the input sentence
-            cur_output_tokens (list): tokenized representation of previously translated words
-            temperature (float): parameter for sampling ranging from 0.0 to 1.0. This parameter 
-                is not actually used but is left as the learner implementation requires it.
+        for r in range(2, len(elements) + 1):
+            # Generate combinations of length r
+            combinations_r = combinations(elements, r)
             
-            vocab_file (str): filename of the vocabulary
-            vocab_dir (str): path to the vocabulary file
+            # Append the combinations to the result list
+            all_combinations.extend(combinations_r)
+        
+        expected = [{0: 0.5, 1: 0.5},
+                     {0: 0.4, 1: 0.4},
+                     {0: 0.0, 1: 0.0},
+                     {0: 0.75, 1: 0.75},
+                     {0: 0.0, 1: 0.0},
+                     {0: 0.2, 1: 0.2},
+                     {0: 0.45, 1: 0.625, 2: 0.575},
+                     {0: 0.25, 1: 0.25, 2: 0.0},
+                     {0: 0.2, 1: 0.3, 2: 0.1},
+                     {0: 0.375, 1: 0.475, 2: 0.1},
+                     {0: 0.3, 1: 0.417, 2: 0.45, 3: 0.067}]
 
-        Returns:
-            tuple: (int, float)
-                int: index of the next token in the translated sentence
-                float: log probability of the next symbol
-        """
-        return self.dict_in_out_map.get(
-            (tuple(map(tuple, input_tokens)), tuple(cur_output_tokens))
-        )
+        cases = []
+        
+        for combination, solution in zip(all_combinations, expected):
+            answer = learner_func(combination, jaccard_similarity)
+            t = test_case()
+            if answer != solution:
+                t.failed = True
+                t.msg = f"Incorrect overlap for lists={combination}"
+                t.want = solution
+                t.got = answer
+            cases.append(t)
 
-
-# UNIT TEST
-# test sampling_decode
-def test_sampling_decode(target):
-
-    the_model = None
-    success = 0
-    fails = 0
-
-    try:
-        test_next_symbol = next_symbol_mock(
-            path_test_files="./test_support_files/i_eat_soup_test"
-        )
-        output = target(
-            "I eat soup.",
-            NMTAttn=the_model,
-            temperature=0,
-            vocab_file="ende_32k.subword",
-            vocab_dir="data/",
-            next_symbol=test_next_symbol.mocked_fn,
-        )
-        # print('output in test 1', output)
-        expected = (
-            [161, 15103, 5, 25132, 35, 3, 1],
-            -0.0003108978271484375,
-            "Ich iss Suppe.",
-        )
-        assert (np.array(output[0]) == np.array(expected[0])).all()
-        assert np.isclose(output[1], expected[1]).all()
-        assert output[2] == expected[2]
-        success += 1
-    except:
-        fails += 1
-        print("Test 1 failed")
-
-    try:
-        test_next_symbol = next_symbol_mock(
-            path_test_files="./test_support_files/i_like_your_shoes_test"
-        )
-        output = target(
-            "I like your shoes.",
-            NMTAttn=the_model,
-            temperature=0,
-            vocab_file="ende_32k.subword",
-            vocab_dir="data/",
-            next_symbol=test_next_symbol.mocked_fn,
-        )
-        # print('output in test 2', output)
-        expected = (
-            [161, 3383, 607, 18144, 35, 3, 1],
-            -0.0006542205810546875,
-            "Ich mag Ihre Schuhe.",
-        )
-
-        assert (np.array(output[0]) == np.array(expected[0])).all()
-        assert np.isclose(output[1], expected[1]).all()
-        assert output[2] == expected[2]
-        assert output[2] == expected[2]
-        success += 1
-    except:
-        fails += 1
-        print("Test 2 failed")
-
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
-
-
-def test_rouge1_similarity(target):
-
-    success = 0
-    fails = 0
-    n_samples = 10
-
-    test_cases = [
-        {
-            "name": "simple_test_check",
-            "input": [[1, 2, 3], [1, 2, 3, 4]],
-            "expected": 0.8571428571428571,
-            "error": "Expected similarity: 0.8571428571428571",
-        },
-        {
-            "name": "simple_test_check",
-            "input": [[2, 1], [3, 1]],
-            "expected": 0.5,
-            "error": "Expected similarity: 0.5",
-        },
-        {
-            "name": "simple_test_check",
-            "input": [[2], [3]],
-            "expected": 0,
-            "error": "Expected similarity: 0",
-        },
-        {
-            "name": "simple_test_check",
-            "input": [[0] * 100 + [2] * 100, [0] * 100 + [1] * 100],
-            "expected": 0.5,
-            "error": "Expected similarity: 0.5",
-        },
-    ]
-
-    private_test_cases = [
-        {
-            "name": "simple_test_check",
-            "input": [[[9, 8, 7, 6, 5], [9, 5, 4]]],
-            "expected": 0.5,
-            "error": "The output from rouge1_similarity does not match.",
-        },
-        {
-            "name": "simple_test_check",
-            "input": [
-                [0] * 10 + [2] * 10 + [4] * 10,
-                [0] * 11 + [2] * 9 + [4] * 5 + [8] * 6,
-            ],
-            "expected": 0.7868852459016393,
-            "error": "The output from rouge1_similarity does not match.",
-        },
-        {
-            "name": "simple_test_check",
-            "input": [[0] * 5 + [1] * 5, [2] * 10],
-            "expected": 0,
-            "error": "The output from rouge1_similarity does not match.",
-        },
-    ]
-
-    for test_case in test_cases:
-
-        try:
-            if test_case["name"] == "simple_test_check":
-                assert abs(test_case["expected"] - target(*test_case["input"])) < 1e-6
-                success += 1
-        except:
-            print(test_case["error"])
-            fails += 1
-
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
-
-
-def test_average_overlap(target, rouge1_similarity):
-    success = 0
-    fails = 0
-
-    test_cases = [
-        {
-            "name": "dict_test_check",
-            "input": [rouge1_similarity, [[1, 2], [3, 4], [1, 2], [3, 5]]],
-            "expected": {
-                0: 0.3333333333333333,
-                1: 0.16666666666666666,
-                2: 0.3333333333333333,
-                3: 0.16666666666666666,
-            },
-            "error": "Expected output does not match",
-        },
-        {
-            "name": "dict_test_check",
-            "input": [
-                rouge1_similarity,
-                [[1, 2], [3, 4], [1, 2, 5], [3, 5], [3, 4, 1]],
-            ],
-            "expected": {
-                0: 0.30000000000000004,
-                1: 0.325,
-                2: 0.38333333333333336,
-                3: 0.325,
-                4: 0.4833333333333334,
-            },
-            "error": "Expected output does not match",
-        },
-    ]
-
-    for test_case in test_cases:
-        try:
-            if test_case["name"] == "dict_test_check":
-                output = target(*test_case["input"])
-                for x in output:
-                    assert abs(output[x] - test_case["expected"][x]) < 1e-5
-                    success += 1
-        except:
-            print(test_case["error"])
-            fails += 1
-
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
-
-
-class generate_samples_mock:
-    """Class that represents a mock of the funcion next_symbol.     
-
-
-    Attributes:    
-        path_test_files (str): path of directory that contains .pkl files.    
-
-    Methods:    
-        read_path_test_files(): Reads the files in .pkl format with 
-            the actual input/output mapping
-
-        mocked_fn(NMTAttn=None
-            , input_tokens=None
-            , cur_output_tokens=None
-            , temperature=0.0): Returns the input/output mapping.
-    """
-
-    def __init__(self, path_test_files):
-        self.path_test_files = path_test_files
-        self.tuple_output = self.read_path_test_files()
-
-    def read_path_test_files(self):
-        """Reads files in .pkl format.
-                
-        Returns:
-            dict: Dictionary that maps the input and output directly.
-        """
-
-        with open(self.path_test_files, "rb") as f:
-            tuple_raw = pickle.load(f)
-
-        return tuple_raw
-
-    def mocked_fn(
-        self,
-        sentence="",
-        n_samples=4,
-        NMTAttn=None,
-        temperature=0.6,
-        vocab_file=None,
-        vocab_dir=None,
-        sampling_decode=None,
-        next_symbol=None,
-        tokenize=None,
-        detokenize=None,
-    ):
-
-        return (self.tuple_output[0], self.tuple_output[1])
-
-
-# test mbr_decode
-def test_mbr_decode(target, score_fn, similarity_fn):
-    success = 0
-    fails = 0
-
-    TEMPERATURE = 0.6
-    VOCAB_FILE = "ende_32k.subword"
-    VOCAB_DIR = "data/"
-
-    test_cases = [
-        {
-            "name": "simple_test_check",
-            "path_file": "./test_support_files/generate_sample_mock/generate_samples_I_eat_soup_sample4_temp_dot6.pkl",
-            "input": "I eat soup.",
-            "expected": "Ich iss Suppe.",
-            "error": "Expected output does not match",
-        },
-        {
-            "name": "simple_test_check",
-            "path_file": "./test_support_files/generate_sample_mock/generate_samples_I_am_hungry.pkl",
-            "input": "I am hungry",
-            "expected": "Ich bin hungrig.",
-            "error": "Expected output does not match",
-        },
-        {
-            "name": "simple_test_check",
-            "path_file": "./test_support_files/generate_sample_mock/generate_samples_Congratulations.pkl",
-            "input": "Congratulations!",
-            "expected": "Herzlichen Glückwunsch!",
-            "error": "Expected output does not match",
-        },
-        {
-            "name": "simple_test_check",
-            "path_file": "./test_support_files/generate_sample_mock/generate_samples_You_have_completed_the_assignment.pkl",
-            "input": "You have completed the assignment!",
-            "expected": "Sie haben die Abtretung abgeschlossen!",
-            "error": "Expected output does not match",
-        },
-    ]
-
-    for test_case in test_cases:
-        try:
-            test_generate_samples = generate_samples_mock(test_case["path_file"])
-            output = target(
-                test_case["input"],
-                4,
-                score_fn=score_fn,
-                similarity_fn=similarity_fn,
-                NMTAttn=None,
-                temperature=TEMPERATURE,
-                vocab_file=VOCAB_FILE,
-                vocab_dir=VOCAB_DIR,
-                generate_samples=test_generate_samples.mocked_fn,
-            )
-            assert len(output) == 3
-            assert output[0] == test_case["expected"]
-            success += 1
-        except:
-            print(test_case["error"])
-            fails += 1
-
-    if fails == 0:
-        print("\033[92m All tests passed")
-    else:
-        print("\033[92m", success, " Tests passed")
-        print("\033[91m", fails, " Tests failed")
+        return cases
+    
+    cases = g()
+    print_feedback(cases)
